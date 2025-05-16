@@ -1,449 +1,250 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
-  FlatList,
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  Pressable,
-  Image,
-  Modal,
-  Dimensions,
   ScrollView,
+  View,
+  Text,
+  StatusBar,
+  Modal,
+  Pressable,
+  StyleSheet,
 } from 'react-native';
-import { Location, SearchNormal } from 'iconsax-react-native';
-import { fontType, colors } from './src/theme';
 
-const { width } = Dimensions.get('window');
+import CategoryList from './src/components/CategoryList';
+import DestinationList from './src/components/DestinationCard';
+import NewsCard from './src/components/NewsCard';
+import SearchBar from './src/components/SearchBar';
 
-// Data destinasi wisata
-const Data = [
-  {
-    id: '1',
-    title: 'Pantai Papuma',
-    location: 'Jember, Jawa Timur',
-    image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Sunset_papuma_beach.jpg/330px-Sunset_papuma_beach.jpg',
-  },
-  {
-    id: '2',
-    title: 'Air Terjun Tancak',
-    location: 'Jember, Jawa Timur',
-    image: 'https://assets.promediateknologi.id/crop/0x0:0x0/750x500/webp/photo/p1/86/2023/10/04/Air-Terjun-Tancak-ttm-2158871595.jpg',
-  },
-];
-
-// Data berita 
-const NewsData = [
-  {
-    id: '1',
-    title: 'Festival Kopi Jember 2025',
-    summary: 'Pemerintah daerah mengadakan Festival Kopi untuk mendukung wisata agro dan menarik wisatawan lokal maupun mancanegara.',
-    source: 'Radar Jember',
-  },
-  {
-    id: '2',
-    title: 'Pantai Watu Ulo Ramai Wisatawan',
-    summary: 'Pantai Watu Ulo dipadati wisatawan selama libur panjang, menjadi destinasi favorit wisata keluarga di Jember.',
-    source: 'Jember Today',
-  },
-];
-
+import { CategoryList as categories, DestinationList as destinations, NewsList } from './src/data';
+import { colors, fontType } from './src/theme';
 
 export default function App() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResult, setSearchResult] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDestination, setSelectedDestination] = useState(null);
-  const flatListRef = useRef(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Popular');
 
-  const handleScroll = (event) => {
-    const slide = Math.round(event.nativeEvent.contentOffset.x / (width * 0.8));
-    setActiveIndex(slide);
-  };
+  // Filter destinations by category and search term
+  const filteredDestinations = destinations.filter((item) => {
+    const matchesCategory =
+      selectedCategory === 'Popular' || selectedCategory === 'Latest'
+        ? true
+        : item.category === selectedCategory;
+    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
-  const handleSearch = () => {
-    const found = Data.find((item) =>
-      item.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    if (found) {
-      setSelectedDestination(found);
-      setSearchResult(found);
-    } else {
-      setSelectedDestination(null);
-      setSearchResult(null);
-    }
-    setModalVisible(true);
-  };
-
-  const handleDestinationPress = (item) => {
+  const handleCardPress = (item) => {
     setSelectedDestination(item);
     setModalVisible(true);
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.carouselCard}>
-      <Pressable onPress={() => handleDestinationPress(item)}>
-        <Image source={{ uri: item.image }} style={styles.cardImage} />
-        <Text style={styles.cardTitle}>{item.title}</Text>
-        <Text style={styles.cardLocation}>{item.location}</Text>
-      </Pressable>
-    </View>
-  );
-
-  const renderNewsItem = ({ item }) => (
-    <View style={styles.newsCard}>
-      <Text style={styles.newsTitle}>{item.title}</Text>
-      <Text style={styles.newsSummary}>{item.summary}</Text>
-      <Text style={styles.newsSource}>Sumber: {item.source}</Text>
-    </View>
-  );
-
-
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>J-Tour</Text>
-        <Location color={colors.white()} variant="Bold" size={24} />
-      </View>
-
-      {/* Search Bar */}
-      <View style={searchBar.container}>
-        <TextInput
-          style={searchBar.input}
-          placeholder="Cari Destinasi"
-          placeholderTextColor={colors.grey(0.7)}
-          value={searchTerm}
-          onChangeText={setSearchTerm}
+    <>
+      <StatusBar backgroundColor={colors.white()} barStyle="dark-content" />
+      <ScrollView>
+        <View style={styles.headerWrapper}>
+          <View style={styles.backgroundAbstract} />
+          <View style={styles.backgroundCircleLarge} />
+          <View style={styles.backgroundCircleSmall} />
+          <View style={styles.backgroundAbstract} />
+          <View style={styles.backgroundLeafRight} />
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoText}>
+              <Text style={styles.logoJ}>J</Text>
+              <Text style={styles.logoDash}>-</Text>
+              <Text style={styles.logoTour}>Tour</Text>
+            </Text>
+            <Text style={styles.logoTagline}>Explore Jember's Hidden Gems</Text>
+          </View>
+          <SearchBar
+            searchTerm={searchTerm}
+            onChangeText={setSearchTerm}
+            onSearch={() => { }}
+          />
+        </View>
+        <CategoryList
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
         />
-        <Pressable style={searchBar.button} onPress={handleSearch}>
-          <SearchNormal size={20} color={colors.white()} />
-        </Pressable>
-      </View>
-
-      {/* Kategori */}
-      <View style={styles.listCategory}>
-        <FlatList
-          data={['Populer', 'Alam', 'Pantai', 'Air Terjun', 'Kuliner', 'Budaya']}
-          keyExtractor={(item) => item}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 24 }}
-          renderItem={({ item, index }) => (
-            <View
-              style={[
-                category.item,
-                index === 0 && { marginLeft: 0 },
-                index === 5 && { marginRight: 0 },
-              ]}
-            >
-              <Text
-                style={[
-                  category.title,
-                  index === 0 && { color: colors.greenDark() },
-                ]}
-              >
-                {item}
-              </Text>
-            </View>
-          )}
-        />
-      </View>
-
-      {/* Rekomendasi Wisata */}
-      <View style={styles.recommendations}>
-        <Text style={styles.recommendationTitle}>Rekomendasi Wisata</Text>
-        <FlatList
-          ref={flatListRef}
-          data={Data}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id}
-          horizontal
-          pagingEnabled
-          onScroll={handleScroll}
-          showsHorizontalScrollIndicator={false}
-          snapToInterval={width * 0.8 + 16}
-          decelerationRate="fast"
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-        />
-        <View style={styles.dotContainer}>
-          {Data.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                {
-                  backgroundColor:
-                    index === activeIndex
-                      ? colors.greenDark()
-                      : colors.greenLight(0.5),
-                },
-              ]}
-            />
+        <DestinationList data={filteredDestinations} onPress={handleCardPress} />
+        <View style={styles.newsSection}>
+          <Text style={styles.newsTitle}>Berita Wisata</Text>
+          {NewsList.map((news) => (
+            <NewsCard key={news.id} {...news} />
           ))}
         </View>
-      </View>
+      </ScrollView>
 
-      {/* News Section */}
-      <View style={styles.newsSection}>
-        <Text style={styles.newsHeader}>News</Text>
-        <FlatList
-          data={NewsData}
-          renderItem={renderNewsItem}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          contentContainerStyle={{ paddingBottom: 30 }}
-        />
-      </View>
-
-      {/* Modal */}
       <Modal
         visible={modalVisible}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={modalStyles.modalBackground}>
-          <View style={modalStyles.modalContainer}>
-            {selectedDestination ? (
+        <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+          <View style={styles.modalContent}>
+            {selectedDestination && (
               <>
-                <Image source={{ uri: selectedDestination.image }} style={modalStyles.image} />
-                <Text style={modalStyles.title}>{selectedDestination.title}</Text>
-                <Text style={modalStyles.location}>{selectedDestination.location}</Text>
-                <View style={modalStyles.buttonContainer}>
-                  <Pressable
-                    style={[modalStyles.button, { backgroundColor: colors.green() }]}
-                    onPress={() => {
-                      setModalVisible(false);
-                      alert('Menuju halaman detail: ' + selectedDestination.title);
-                    }}
-                  >
-                    <Text style={modalStyles.buttonText}>Detail</Text>
-                  </Pressable>
-                  <Pressable
-                    style={[modalStyles.button, { backgroundColor: colors.grey(0.3) }]}
-                    onPress={() => setModalVisible(false)}
-                  >
-                    <Text style={[modalStyles.buttonText, { color: colors.greenDark() }]}>
-                      Tutup
-                    </Text>
-                  </Pressable>
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={modalStyles.title}>Destinasi tidak ditemukan</Text>
-                <Pressable
-                  style={modalStyles.modalButtonSingle}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <Text style={[modalStyles.buttonText, { color: colors.greenDark() }]}>Tutup</Text>
-                </Pressable>
-
+                <Text style={styles.modalTitle}>{selectedDestination.name}</Text>
+                <Text style={styles.modalLocation}>{selectedDestination.location}</Text>
+                <Text style={styles.modalDescription}>{selectedDestination.description}</Text>
               </>
             )}
           </View>
-        </View>
+        </Pressable>
       </Modal>
-    </View>
+    </>
   );
 }
 
-// StyleSheet
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white() },
-  header: {
-    paddingHorizontal: 32,
-    justifyContent: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 100,
-    backgroundColor: colors.greenDark(),
-    elevation: 8,
-    paddingTop: 18,
-    paddingBottom: 9,
-  },
   title: {
     fontSize: 28,
-    fontFamily: fontType['Poppins-ExtraBold'],
-    color: colors.white(),
-    marginRight: 8,
-  },
-  listCategory: { paddingVertical: 10, marginTop: 6 },
-  recommendations: { marginTop: 20 },
-  recommendationTitle: {
-    fontSize: 20,
-    fontFamily: fontType['Poppins-SemiBold'],
-    color: colors.greenDark(),
+    fontFamily: fontType['Poppins-Bold'],
     marginLeft: 24,
-    marginBottom: 10,
-  },
-  carouselCard: {
-    width: width * 0.8,
-    backgroundColor: colors.white(),
-    borderRadius: 12,
-    marginRight: 16,
-    shadowColor: colors.green(0.1),
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-    overflow: 'hidden',
-  },
-  cardImage: {
-    width: '100%',
-    height: 160,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontFamily: fontType['Poppins-SemiBold'],
+    marginTop: 12,
+    marginBottom: 8,
     color: colors.greenDark(),
-    paddingHorizontal: 10,
-    paddingTop: 8,
   },
-  cardLocation: {
-    fontSize: 12,
-    fontFamily: fontType['Poppins-Regular'],
-    color: colors.grey(),
-    paddingHorizontal: 10,
+  headerWrapper: {
+    position: 'relative',
+    paddingTop: 16,
     paddingBottom: 12,
-  },
-  dotContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 10,
-  },
-  dot: { width: 10, height: 10, borderRadius: 5, marginHorizontal: 5 },
-  newsSection: {
-    marginTop: 20,
     paddingHorizontal: 24,
+    zIndex: 1,
   },
-  newsHeader: {
-    fontSize: 20,
-    fontFamily: fontType['Poppins-SemiBold'],
+  backgroundCircleLarge: {
+    position: 'absolute',
+    top: -40,
+    right: -50,
+    width: 140,
+    height: 140,
+    backgroundColor: colors.green(0.15),
+    borderRadius: 70,
+    zIndex: 0,
+  },
+
+  backgroundCircleSmall: {
+    position: 'absolute',
+    top: 20,
+    left: 10,
+    width: 70,
+    height: 70,
+    backgroundColor: colors.green(0.1),
+    borderRadius: 35,
+    zIndex: 0,
+  },
+
+  backgroundLeafLeft: {
+    position: 'absolute',
+    bottom: 10,
+    left: -40,
+    width: 90,
+    height: 50,
+    backgroundColor: colors.green(0.12),
+    borderTopLeftRadius: 50,
+    borderBottomRightRadius: 50,
+    transform: [{ rotate: '-25deg' }],
+    zIndex: 0,
+  },
+
+  backgroundLeafRight: {
+    position: 'absolute',
+    bottom: 20,
+    right: -30,
+    width: 70,
+    height: 40,
+    backgroundColor: colors.green(0.1),
+    borderTopLeftRadius: 40,
+    borderBottomRightRadius: 40,
+    transform: [{ rotate: '15deg' }],
+    zIndex: 0,
+  },
+  backgroundAbstract: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 140,
+    backgroundColor: colors.green(0.25),
+    borderBottomLeftRadius: 100,
+    borderBottomRightRadius: 100,
+    transform: [{ scaleX: 1.5 }],
+    zIndex: -1,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+
+  logoText: {
+    fontSize: 32,
+    fontFamily: fontType['Poppins-Bold'],
+    flexDirection: 'row',
+  },
+  logoJ: {
     color: colors.greenDark(),
-    marginBottom: 10,
+    fontSize: 36,
+    fontFamily: fontType['Poppins-Bold'],
   },
-  newsCard: {
-    marginBottom: 12,
-    backgroundColor: colors.greenLight(0.05),
-    borderRadius: 8,
-    padding: 12,
+  logoDash: {
+    color: colors.grey(),
+    fontSize: 32,
+    fontFamily: fontType['Poppins-Bold'],
+  },
+  logoTour: {
+    color: colors.green(),
+    fontSize: 32,
+    fontFamily: fontType['Poppins-Bold'],
+  },
+  logoTagline: {
+    marginTop: 0,
+    fontSize: 14,
+    fontFamily: fontType['Poppins-Regular'],
+    color: colors.grey(1),
+    textAlign: 'center',
+  },
+  newsSection: {
+    marginHorizontal: 24,
+    marginTop: 20,
+    marginBottom: 40,
   },
   newsTitle: {
-    fontSize: 16,
-    fontFamily: fontType['Poppins-Medium'],
-    color: colors.greenDark(),
-  },
-  newsSummary: {
-    fontSize: 13,
-    fontFamily: fontType['Poppins-Regular'],
-    color: colors.grey(),
-    marginTop: 4,
-  },
-});
-
-const category = StyleSheet.create({
-  item: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 25,
-    alignItems: 'center',
-    backgroundColor: colors.greenLight(0.15),
-    marginHorizontal: 5,
-  },
-  title: {
+    fontSize: 20,
     fontFamily: fontType['Poppins-SemiBold'],
-    fontSize: 14,
-    lineHeight: 18,
     color: colors.greenDark(),
+    marginBottom: 10,
   },
-});
-
-const searchBar = StyleSheet.create({
-  container: {
-    marginHorizontal: 24,
-    backgroundColor: colors.greenLight(0.1),
-    borderColor: colors.greenLight(0.3),
-    borderRadius: 10,
-    borderWidth: 1,
-    flexDirection: 'row',
-    marginTop: 16,
-  },
-  input: {
-    height: 40,
-    padding: 10,
-    width: '90%',
-    fontFamily: fontType['Poppins-Regular'],
-    color: colors.black(),
-  },
-  button: {
-    backgroundColor: colors.green(),
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 40,
-    width: 40,
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
-  },
-});
-
-const modalStyles = StyleSheet.create({
-  modalBackground: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: colors.black(0.4),
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  modalContainer: {
-    width: '80%',
+  modalContent: {
+    width: '100%',
     backgroundColor: colors.white(),
-    padding: 20,
     borderRadius: 12,
-    alignItems: 'center',
-    elevation: 5,
+    padding: 20,
   },
-  image: { width: '100%', height: 150, borderRadius: 8 },
-  title: {
-    fontSize: 18,
-    fontFamily: fontType['Poppins-SemiBold'],
+  modalTitle: {
+    fontSize: 22,
+    fontFamily: fontType['Poppins-Bold'],
     color: colors.greenDark(),
-    marginTop: 12,
-    textAlign: 'center',
+    marginBottom: 10,
   },
-  location: {
+  modalLocation: {
+    fontSize: 16,
+    fontFamily: fontType['Poppins-Regular'],
+    color: colors.grey(),
+    marginBottom: 10,
+  },
+  modalDescription: {
     fontSize: 14,
     fontFamily: fontType['Poppins-Regular'],
     color: colors.grey(),
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    gap: 10,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontFamily: fontType['Poppins-Medium'],
-    color: colors.white(),
-    fontSize: 14,
-  },
-  modalButtonSingle: {
-    marginTop: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    backgroundColor: colors.grey(0.3),
-    width: '100%',
   },
 });
