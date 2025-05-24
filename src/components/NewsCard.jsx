@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, Pressable } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { colors, fontType } from '../theme';
 
-export default function NewsCard({ title, category, date, content, image, onPress, item }) {
+export default function NewsCard({ title, category, date, content, image, item }) {
+  const navigation = useNavigation();
+
   const truncateText = (text, maxLength = 100) => {
     if (!text) return '';
     return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
@@ -10,55 +13,65 @@ export default function NewsCard({ title, category, date, content, image, onPres
 
   const isContentLong = content && content.length > 100;
 
+  const handlePress = () => {
+    navigation.navigate('NewsDetails', { news: item });
+  };
+
   return (
-    <View style={styles.newsCard}>
-      <Pressable onPress={() => onPress(item)}>
-      <Image source={{ uri: image }} style={styles.newsImage} />
-      <Text style={styles.newsTitle}>{title}</Text>
-      <Text style={styles.newsCategoryDate}>{category} - {date}</Text>
-      <Text style={styles.newsContent}>
-        {truncateText(content, 100)}{' '}
-        {isContentLong && (
-          <Text style={styles.readMore}>Baca Selengkapnya</Text>
-        )}
-      </Text>
-      </Pressable>
-    </View>
+    <TouchableOpacity onPress={handlePress} activeOpacity={0.85} style={styles.card}>
+      <Image source={{ uri: image }} style={styles.image} />
+      <View style={styles.textContainer}>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.categoryDate}>{category} • {date}</Text>
+        <Text style={styles.content}>
+          {truncateText(content)}
+          {isContentLong && <Text style={styles.readMore}> Baca Selengkapnya</Text>}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  newsCard: {
-    marginBottom: 16,
-    backgroundColor: colors.greenLight(0.05),
-    borderRadius: 8,
-    padding: 12,
+  card: {
+    backgroundColor: colors.white(),
+    borderRadius: 12,
+    marginBottom: 20,
+    overflow: 'hidden',
+    shadowColor: colors.black(0.1),
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  newsImage: {
+  image: {
     width: '100%',
-    height: 140,
-    borderRadius: 8,
+    height: 180,
+    resizeMode: 'cover',
   },
-  newsTitle: {
+  textContainer: {
+    padding: 14,
+  },
+  title: {
     fontSize: 16,
-    fontFamily: fontType['Poppins-Medium'],
+    fontFamily: fontType['Poppins-SemiBold'],
     color: colors.greenDark(),
-    marginTop: 8,
+    marginBottom: 4,
   },
-  newsCategoryDate: {
+  categoryDate: {
     fontSize: 12,
     fontFamily: fontType['Poppins-Regular'],
-    color: colors.grey(),
-    marginTop: 4,
+    color: colors.grey(0.8),
+    marginBottom: 8,
   },
-  newsContent: {
+  content: {
     fontSize: 13,
     fontFamily: fontType['Poppins-Regular'],
-    color: colors.grey(),
-    marginTop: 6,
+    color: colors.grey(0.9),
+    lineHeight: 18,
   },
   readMore: {
+    fontFamily: fontType['Poppins-Medium'],
     color: colors.greenDark(),
-    fontWeight: 'bold',
   },
 });

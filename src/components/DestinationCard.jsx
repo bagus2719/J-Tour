@@ -4,28 +4,37 @@ import {
   View,
   Text,
   Image,
-  Pressable,
+  TouchableOpacity,
   StyleSheet,
   Dimensions,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { colors, fontType } from '../theme';
 
 const { width } = Dimensions.get('window');
 
-export default function DestinationList({ data, onPress }) {
+export default function DestinationList({ data }) {
+  const navigation = useNavigation();
+
+  const handlePress = (item) => {
+    navigation.navigate('DestinationDetails', { destination: item });
+  };
+
   return (
     <View style={styles.recommendations}>
       <Text style={styles.recommendationTitle}>Rekomendasi Wisata</Text>
       <FlatList
         data={data}
         renderItem={({ item }) => (
-          <View style={styles.carouselCard}>
-            <Pressable onPress={() => onPress(item)}>
-              <Image source={{ uri: item.image }} style={styles.cardImage} />
-              <Text style={styles.cardTitle}>{item.name}</Text>
-              <Text style={styles.cardLocation}>{item.location}</Text>
-            </Pressable>
-          </View>
+          <TouchableOpacity
+            onPress={() => handlePress(item)}
+            activeOpacity={0.7}
+            style={styles.carouselCard}
+          >
+            <Image source={{ uri: item.image }} style={styles.cardImage} />
+            <Text style={styles.cardTitle}>{item.name}</Text>
+            <Text style={styles.cardLocation}>{item.location}</Text>
+          </TouchableOpacity>
         )}
         keyExtractor={(item) => item.id.toString()}
         horizontal

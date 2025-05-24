@@ -4,8 +4,6 @@ import {
     View,
     Text,
     StatusBar,
-    Modal,
-    Pressable,
     StyleSheet,
     TouchableWithoutFeedback,
     Keyboard,
@@ -16,12 +14,6 @@ import { CategoryList as categories, DestinationList as destinations, NewsList }
 import { colors, fontType } from '../../theme';
 
 export default function Home() {
-    const [modalVisibleDestination, setModalVisibleDestination] = useState(false);
-    const [selectedDestination, setSelectedDestination] = useState(null);
-
-    const [modalVisibleNews, setModalVisibleNews] = useState(false);
-    const [selectedNews, setSelectedNews] = useState(null);
-
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('Popular');
 
@@ -36,25 +28,23 @@ export default function Home() {
     });
 
     // Filter news by category and search term
-    const filteredNews = NewsList.filter((news) => {
+    const filteredNews = NewsList.filter((item) => {
         const matchesCategory =
             selectedCategory === 'Popular' || selectedCategory === 'Latest'
                 ? true
-                : news.category === selectedCategory;
+                : item.category === selectedCategory;
 
-        const matchesSearch = news.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
 
         return matchesCategory && matchesSearch;
     });
 
     const handleDestinationPress = (item) => {
         setSelectedDestination(item);
-        setModalVisibleDestination(true);
     };
 
-    const handleNewsPress = (news) => {
-        setSelectedNews(news);
-        setModalVisibleNews(true);
+    const handleNewsPress = (item) => {
+        setSelectedNews(item);
     };
 
     return (
@@ -90,57 +80,11 @@ export default function Home() {
                     <View style={styles.newsSection}>
                         <Text style={styles.newsTitle}>Berita Wisata</Text>
                         {filteredNews.slice(0, 3).map((news) => (
-                            <NewsCard key={news.id} {...news} onPress={() => handleNewsPress(news)} />
+                            <NewsCard key={news.id} {...news} onPress={() => handleNewsPress(item)} />
                         ))}
                     </View>
                 </ScrollView>
             </TouchableWithoutFeedback>
-
-            {/* Modal untuk Destination */}
-            <Modal
-                visible={modalVisibleDestination}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setModalVisibleDestination(false)}
-            >
-                <Pressable style={styles.modalOverlay} onPress={() => setModalVisibleDestination(false)}>
-                    <Pressable
-                        onPress={(e) => e.stopPropagation()}
-                        style={styles.modalContent}
-                    >
-                        {selectedDestination && (
-                            <>
-                                <Text style={styles.modalTitle}>{selectedDestination.name}</Text>
-                                <Text style={styles.modalLocation}>{selectedDestination.location}</Text>
-                                <Text style={styles.modalDescription}>{selectedDestination.description}</Text>
-                            </>
-                        )}
-                    </Pressable>
-                </Pressable>
-            </Modal>
-
-            {/* Modal untuk News */}
-            <Modal
-                visible={modalVisibleNews}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setModalVisibleNews(false)}
-            >
-                <Pressable style={styles.modalOverlay} onPress={() => setModalVisibleNews(false)}>
-                    <Pressable
-                        onPress={(e) => e.stopPropagation()}
-                        style={styles.modalContent}
-                    >
-                        {selectedNews && (
-                            <>
-                                <Text style={styles.modalTitle}>{selectedNews.title}</Text>
-                                <Text style={styles.modalDate}>{selectedNews.date}</Text>
-                                <Text style={styles.modalDescription}>{selectedNews.content}</Text>
-                            </>
-                        )}
-                    </Pressable>
-                </Pressable>
-            </Modal>
         </>
     );
 }
@@ -257,42 +201,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontFamily: fontType['Poppins-SemiBold'],
         color: colors.greenDark(),
-        marginBottom: 10,
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: colors.black(0.4),
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 24,
-    },
-    modalContent: {
-        width: '100%',
-        backgroundColor: colors.white(),
-        borderRadius: 12,
-        padding: 20,
-    },
-    modalTitle: {
-        fontSize: 22,
-        fontFamily: fontType['Poppins-Bold'],
-        color: colors.greenDark(),
-        marginBottom: 10,
-    },
-    modalLocation: {
-        fontSize: 16,
-        fontFamily: fontType['Poppins-Regular'],
-        color: colors.grey(),
-        marginBottom: 10,
-    },
-    modalDescription: {
-        fontSize: 14,
-        fontFamily: fontType['Poppins-Regular'],
-        color: colors.grey(),
-    },
-    modalDate: {
-        fontSize: 14,
-        fontFamily: fontType['Poppins-Regular'],
-        color: colors.grey(),
         marginBottom: 10,
     },
 });
