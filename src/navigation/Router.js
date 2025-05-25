@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { Animated } from 'react-native';
 import { createStackNavigator, TransitionPresets } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, News, Destinations, DestinationDetails, NewsDetails, Profile, FormAddData,} from '../screens';
+import { Home, News, Destinations, DestinationDetails, NewsDetails, Profile, FormAddData, FormEditData, } from '../screens';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { colors, fontType } from '../theme';
 
@@ -84,6 +84,7 @@ const Router = () => {
       <Stack.Screen name="DestinationDetails" component={DestinationDetails} />
       <Stack.Screen name="NewsDetails" component={NewsDetails} />
       <Stack.Screen name="FormAddData" component={FormAddData} />
+      <Stack.Screen name="FormEditData" component={FormEditData} />
     </Stack.Navigator>
   );
 };

@@ -1,26 +1,71 @@
-import React, { useState } from 'react';
-import {
-    View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
-    Alert, Image, ActivityIndicator, Platform
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Image, ActivityIndicator, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { colors, fontType } from '../../theme';
+import { getDestinationById, getNewsById, putDestination, putNews } from '../../services/api';
 
-// Import API functions
-import { postDestination, postNews } from '../../services/api';
+export default function FormEditData({ route, navigation }) {
+    const { type, id } = route.params || {};
 
-export default function FormAddData({ route, navigation }) {
-    const { type } = route.params;
-
-    const defaultForm = type === 'destination'
-        ? { name: '', location: '', category: '', description: '', facilities: '', image: '' }
-        : { title: '', category: '', date: '', content: '', image: '' };
-
-    const [form, setForm] = useState(defaultForm);
+    const [form, setForm] = useState(null);
     const [loading, setLoading] = useState(false);
-
+    const [loadingData, setLoadingData] = useState(true);
     const [datePickerVisible, setDatePickerVisible] = useState(false);
     const [dateObj, setDateObj] = useState(new Date());
+
+    useEffect(() => {
+        if (!id) {
+            Alert.alert('Error', 'ID tidak ditemukan!');
+            navigation.goBack();
+            return;
+        }
+
+        async function fetchData() {
+            setLoadingData(true);
+            try {
+                let data;
+                if (type === 'destination') {
+                    data = await getDestinationById(id);
+                } else if (type === 'news') {
+                    data = await getNewsById(id);
+                }
+                if (!data) throw new Error('Data tidak ditemukan');
+
+                // Setup form default
+                if (type === 'destination') {
+                    setForm({
+                        name: data.name || '',
+                        location: data.location || '',
+                        category: data.category || '',
+                        description: data.description || '',
+                        facilities: data.facilities ? data.facilities.join(', ') : '',
+                        image: data.image || '',
+                    });
+                } else if (type === 'news') {
+                    setForm({
+                        title: data.title || '',
+                        category: data.category || '',
+                        date: data.date || '',
+                        content: data.content || '',
+                        image: data.image || '',
+                    });
+
+                    if (data.date) {
+                        // Parse date from "dd/mm/yyyy"
+                        const [day, month, year] = data.date.split('/');
+                        setDateObj(new Date(year, month - 1, day));
+                    }
+                }
+            } catch (error) {
+                Alert.alert('Error', error.message);
+                navigation.goBack();
+            } finally {
+                setLoadingData(false);
+            }
+        }
+
+        fetchData();
+    }, [id, type, navigation]);
 
     const formatDate = (date) => {
         const day = date.getDate().toString().padStart(2, '0');
@@ -42,6 +87,16 @@ export default function FormAddData({ route, navigation }) {
     };
 
     const onSubmit = async () => {
+        if (!id) {
+            Alert.alert('Error', 'Data tidak valid, tidak ada ID.');
+            return;
+        }
+
+        if (!form) {
+            Alert.alert('Error', 'Form belum siap.');
+            return;
+        }
+
         setLoading(true);
 
         if (type === 'destination') {
@@ -54,16 +109,16 @@ export default function FormAddData({ route, navigation }) {
             }
 
             try {
-                await postDestination({
+                await putDestination(id, {
                     name,
                     location,
                     category,
                     description,
                     facilities: facilities.split(',').map(item => item.trim()),
-                    image
+                    image,
                 });
 
-                Alert.alert('Sukses', 'Destinasi berhasil ditambahkan!');
+                Alert.alert('Sukses', 'Destinasi berhasil diperbarui!');
                 navigation.goBack();
             } catch (error) {
                 Alert.alert('Error', error.message);
@@ -80,15 +135,15 @@ export default function FormAddData({ route, navigation }) {
             }
 
             try {
-                await postNews({
+                await putNews(id, {
                     title,
                     category,
                     date,
                     content,
-                    image
+                    image,
                 });
 
-                Alert.alert('Sukses', 'Berita berhasil ditambahkan!');
+                Alert.alert('Sukses', 'Berita berhasil diperbarui!');
                 navigation.goBack();
             } catch (error) {
                 Alert.alert('Error', error.message);
@@ -98,10 +153,18 @@ export default function FormAddData({ route, navigation }) {
         }
     };
 
+    if (loadingData || !form) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={colors.greenDark()} />
+            </View>
+        );
+    }
+
     return (
         <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
             <Text style={styles.header}>
-                {type === 'destination' ? 'Tambah Destinasi' : 'Tambah Berita'}
+                {type === 'destination' ? 'Edit Destinasi' : 'Edit Berita'}
             </Text>
 
             {type === 'destination' ? (
@@ -163,7 +226,10 @@ export default function FormAddData({ route, navigation }) {
                         onChangeText={(text) => onChange('category', text)}
                     />
 
-                    <TouchableOpacity onPress={() => setDatePickerVisible(true)} style={[styles.input, { justifyContent: 'center' }]}>
+                    <TouchableOpacity
+                        onPress={() => setDatePickerVisible(true)}
+                        style={[styles.input, { justifyContent: 'center' }]}
+                    >
                         <Text style={{ color: form.date ? colors.black() : colors.grey() }}>
                             {form.date || 'Pilih Tanggal'}
                         </Text>
@@ -202,9 +268,7 @@ export default function FormAddData({ route, navigation }) {
                 {loading ? (
                     <ActivityIndicator color={colors.white()} />
                 ) : (
-                    <Text style={styles.buttonText}>
-                        Tambah {type === 'destination' ? 'Destinasi' : 'Berita'}
-                    </Text>
+                    <Text style={styles.buttonText}>Simpan Perubahan</Text>
                 )}
             </TouchableOpacity>
         </ScrollView>
@@ -217,9 +281,9 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white(),
     },
     header: {
-        fontSize: 22,
-        fontFamily: fontType['Poppins-Bold'],
-        marginBottom: 20,
+        fontSize: 24,
+        fontFamily: fontType.bold,
+        marginBottom: 16,
         color: colors.greenDark(),
         textAlign: 'center',
     },
@@ -228,32 +292,29 @@ const styles = StyleSheet.create({
         borderColor: colors.grey(),
         borderRadius: 8,
         padding: 12,
-        marginBottom: 16,
-        fontFamily: fontType['Poppins-Regular'],
+        marginBottom: 12,
+        fontFamily: fontType.regular,
         fontSize: 16,
+        color: colors.black(),
         backgroundColor: colors.white(),
     },
     button: {
         backgroundColor: colors.greenDark(),
-        paddingVertical: 14,
-        borderRadius: 10,
+        padding: 15,
+        borderRadius: 8,
         alignItems: 'center',
-        marginTop: 10,
-        shadowColor: '#000',
-        shadowOpacity: 0.2,
-        shadowOffset: { width: 0, height: 3 },
-        shadowRadius: 5,
-        elevation: 4,
+        marginTop: 16,
+        marginBottom: 40,
     },
     buttonText: {
         color: colors.white(),
-        fontSize: 16,
-        fontFamily: fontType['Poppins-SemiBold'],
+        fontFamily: fontType.bold,
+        fontSize: 18,
     },
     imagePreview: {
         width: '100%',
-        height: 180,
+        height: 200,
+        marginBottom: 12,
         borderRadius: 8,
-        marginBottom: 16,
     },
 });

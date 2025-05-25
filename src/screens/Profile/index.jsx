@@ -1,9 +1,10 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Image, Animated, } from 'react-native';
-import { Setting2, Edit2, Add } from 'iconsax-react-native';
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity, Image, Animated, ActivityIndicator, Alert } from 'react-native';
+import { Setting2, Edit2, Add, More } from 'iconsax-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ProfileData, DestinationList, NewsList } from '../../data';
+import { ProfileData } from '../../data'; // Hanya ambil ProfileData saja
 import { fontType, colors } from '../../theme';
+import { getDestinations, getNews, deleteDestination, deleteNews } from '../../services/api'; // import fungsi get API
 
 const formatNumber = number => {
   if (number >= 1000000000) return (number / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
@@ -16,6 +17,40 @@ const Profile = () => {
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const navigation = useNavigation();
   const [showOptions, setShowOptions] = React.useState(false);
+
+  // State untuk data destinasi dan news
+  const [destinations, setDestinations] = React.useState([]);
+  const [news, setNews] = React.useState([]);
+  const [loadingDestinations, setLoadingDestinations] = React.useState(true);
+  const [loadingNews, setLoadingNews] = React.useState(true);
+  const [error, setError] = React.useState(null);
+  const [selectedItem, setSelectedItem] = React.useState(null);
+  const [selectedType, setSelectedType] = React.useState(null);
+  const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+
+  React.useEffect(() => {
+    // Fetch destinasi
+    getDestinations()
+      .then(data => {
+        setDestinations(data);
+        setLoadingDestinations(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoadingDestinations(false);
+      });
+
+    // Fetch news
+    getNews()
+      .then(data => {
+        setNews(data);
+        setLoadingNews(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoadingNews(false);
+      });
+  }, []);
 
   const onPressIn = () => {
     Animated.spring(scaleAnim, {
@@ -47,24 +82,15 @@ const Profile = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={profile.profileHeader}>
-          <Image
-            style={profile.pic}
-            source={{ uri: ProfileData.profilePict }}
-            resizeMode="cover"
-          />
+          <Image style={profile.pic} source={{ uri: ProfileData.profilePict }} resizeMode="cover" />
           <View style={profile.infoContainer}>
             <Text style={profile.name}>{ProfileData.name}</Text>
             <Text style={profile.bio} numberOfLines={3}>
               {ProfileData.bio || 'Passionate traveler and blogger sharing my adventures and tips.'}
             </Text>
-            <Text style={profile.memberSince}>
-              Member since {ProfileData.createdAt}
-            </Text>
+            <Text style={profile.memberSince}>Member since {ProfileData.createdAt}</Text>
           </View>
         </View>
 
@@ -84,23 +110,14 @@ const Profile = () => {
         </View>
 
         <View style={profile.buttonsContainer}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPressIn={onPressIn}
-            onPressOut={onPressOut}
-            onPress={onPressEdit}
-          >
+          <TouchableOpacity activeOpacity={0.8} onPressIn={onPressIn} onPressOut={onPressOut} onPress={onPressEdit}>
             <Animated.View style={[profile.buttonEdit, { transform: [{ scale: scaleAnim }] }]}>
               <Edit2 size={20} color={colors.white()} variant="Bold" />
               <Text style={profile.buttonText}>Edit Profile</Text>
             </Animated.View>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={profile.buttonSetting}
-            activeOpacity={0.7}
-            onPress={onPressSetting}
-          >
+          <TouchableOpacity style={profile.buttonSetting} activeOpacity={0.7} onPress={onPressSetting}>
             <Setting2 size={24} color={colors.green()} variant="Linear" />
           </TouchableOpacity>
         </View>
@@ -108,23 +125,67 @@ const Profile = () => {
         {/* Destination Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Destinations</Text>
-          {DestinationList.map((item, index) => (
-            <View key={index} style={styles.itemCard}>
-              <Text style={styles.itemTitle}>{item.name}</Text>
-              <Text style={styles.itemDesc} numberOfLines={2}>{item.description}</Text>
-            </View>
-          ))}
+          {loadingDestinations ? (
+            <ActivityIndicator size="small" color={colors.green()} />
+          ) : error ? (
+            <Text style={{ color: 'red' }}>{error}</Text>
+          ) : (
+            destinations.map((item, index) => (
+              <View key={index} style={styles.itemCard}>
+                <View style={styles.itemCardHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemTitle}>{item.name}</Text>
+                    <Text style={styles.itemDesc} numberOfLines={2}>{item.description}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedItem(item);
+                      setSelectedType('destination');
+                      setShowDeleteModal(true);
+                    }}
+                  >
+                    <More size={22} color={colors.greenDark()} variant="Linear" />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.itemDesc} numberOfLines={2}>
+                  {item.description}
+                </Text>
+              </View>
+            ))
+          )}
         </View>
 
         {/* News Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>News</Text>
-          {NewsList.map((item, index) => (
-            <View key={index} style={styles.itemCard}>
-              <Text style={styles.itemTitle}>{item.title}</Text>
-              <Text style={styles.itemDesc} numberOfLines={2}>{item.content}</Text>
-            </View>
-          ))}
+          {loadingNews ? (
+            <ActivityIndicator size="small" color={colors.green()} />
+          ) : error ? (
+            <Text style={{ color: 'red' }}>{error}</Text>
+          ) : (
+            news.map((item, index) => (
+              <View key={index} style={styles.itemCard}>
+                <View style={styles.itemCardHeader}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemTitle}>{item.title}</Text>
+                    <Text style={styles.itemDesc} numberOfLines={2}>{item.content}</Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedItem(item);
+                      setSelectedType('news');
+                      setShowDeleteModal(true);
+                    }}
+                  >
+                    <More size={22} color={colors.greenDark()} variant="Linear" />
+                  </TouchableOpacity>
+                </View>
+                <Text style={styles.itemDesc} numberOfLines={2}>
+                  {item.content}
+                </Text>
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
 
@@ -165,11 +226,71 @@ const Profile = () => {
         </View>
       )}
 
+      {selectedItem && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Aksi Data</Text>
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                setSelectedItem(null);
+                navigation.navigate('FormEditData', { id: selectedItem.id, type: selectedType });
+              }}
+            >
+              <Text style={styles.modalButtonText}>Edit</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                Alert.alert(
+                  'Konfirmasi Hapus',
+                  'Yakin ingin menghapus data ini?',
+                  [
+                    {
+                      text: 'Batal',
+                      style: 'cancel',
+                    },
+                    {
+                      text: 'Hapus',
+                      style: 'destructive',
+                      onPress: async () => {
+                        try {
+                          if (selectedType === 'destination') {
+                            await deleteDestination(selectedItem.id);
+                            setDestinations(prev => prev.filter(item => item.id !== selectedItem.id));
+                          } else if (selectedType === 'news') {
+                            await deleteNews(selectedItem.id);
+                            setNews(prev => prev.filter(item => item.id !== selectedItem.id));
+                          }
+                          setSelectedItem(null);
+                        } catch (error) {
+                          console.error('Delete error:', error);
+                          Alert.alert('Gagal menghapus', 'Terjadi kesalahan saat menghapus data.');
+                        }
+                      },
+                    },
+                  ],
+                  { cancelable: true }
+                );
+              }}
+            >
+              <Text style={[styles.modalButtonText, { color: 'red' }]}>Delete</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={() => setSelectedItem(null)}>
+              <Text style={styles.modalCancelText}>Batal</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
 
 export default Profile;
+
 
 const styles = StyleSheet.create({
   container: {
@@ -225,48 +346,54 @@ const styles = StyleSheet.create({
     color: colors.grey(0.7),
   },
   modalOverlay: {
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  backgroundColor: 'rgba(0,0,0,0.5)',
-  justifyContent: 'center',
-  alignItems: 'center',
-  zIndex: 10,
-},
-modalContainer: {
-  backgroundColor: colors.white(),
-  borderRadius: 16,
-  padding: 20,
-  width: 260,
-  alignItems: 'center',
-},
-modalTitle: {
-  fontSize: 18,
-  fontFamily: fontType['Pjs-Bold'],
-  color: colors.greenDark(),
-  marginBottom: 16,
-},
-modalButton: {
-  width: '100%',
-  paddingVertical: 12,
-  backgroundColor: colors.green(0.2),
-  borderRadius: 10,
-  marginBottom: 10,
-  alignItems: 'center',
-},
-modalButtonText: {
-  fontSize: 16,
-  fontFamily: fontType['Pjs-Medium'],
-  color: colors.greenDark(),
-},
-modalCancelText: {
-  marginTop: 10,
-  fontSize: 14,
-  color: colors.grey(),
-  fontFamily: fontType['Pjs-Regular'],
-},
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  modalContainer: {
+    backgroundColor: colors.white(),
+    borderRadius: 16,
+    padding: 20,
+    width: 260,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: fontType['Pjs-Bold'],
+    color: colors.greenDark(),
+    marginBottom: 16,
+  },
+  modalButton: {
+    width: '100%',
+    paddingVertical: 12,
+    backgroundColor: colors.green(0.2),
+    borderRadius: 10,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontFamily: fontType['Pjs-Medium'],
+    color: colors.greenDark(),
+  },
+  modalCancelText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: colors.grey(),
+    fontFamily: fontType['Pjs-Regular'],
+  },
+  itemCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
 });
 
 const profile = StyleSheet.create({
