@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  FlatList,
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
+import { FlatList, View, Text, Image, TouchableOpacity, StyleSheet, Dimensions, } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors, fontType } from '../theme';
 

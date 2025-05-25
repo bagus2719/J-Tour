@@ -1,14 +1,5 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  FlatList,
-  Dimensions,
-} from 'react-native';
-
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, FlatList, Dimensions, TouchableOpacity, } from 'react-native';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { DestinationList } from '../../data';
 import { colors, fontType } from '../../theme';
@@ -17,6 +8,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function DestinationDetails() {
   const destination = DestinationList.find((item) => item.id === 1); // Hardcoded ID 1 (bisa diubah dinamis nanti)
+  const [liked, setLiked] = useState(null);
 
   if (!destination) {
     return (
@@ -64,6 +56,27 @@ export default function DestinationDetails() {
             <Text key={index}>{facility} {'\n'}</Text>
           ))}
         </Text>
+        <View style={styles.likeContainer}>
+          <TouchableOpacity
+            style={[
+              styles.likeButton,
+              liked === true && { backgroundColor: '#4CAF50' },
+            ]}
+            onPress={() => setLiked(true)}
+          >
+            <Text style={styles.likeText}>👍 Like</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.likeButton,
+              liked === false && { backgroundColor: '#F44336' },
+            ]}
+            onPress={() => setLiked(false)}
+          >
+            <Text style={styles.likeText}>👎 Dislike</Text>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.sectionTitle}>Review Pengunjung</Text>
         {destination.reviews.map((review, index) => (
@@ -128,6 +141,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fontType['Poppins-Regular'],
     color: colors.grey(1),
+  },
+  likeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 20,
+  },
+  likeButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#e0e0e0',
+  },
+  likeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   reviewCard: {
     backgroundColor: colors.green(0.05),

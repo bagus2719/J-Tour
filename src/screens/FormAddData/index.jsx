@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import {View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { colors, fontType } from '../../theme';
-
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Image } from 'react-native';
+import { ActivityIndicator } from 'react-native'; // tambahkan di import atas
+
 export default function FormAddData({ route, navigation }) {
     const { type } = route.params; // 'destination' or 'news'
 
@@ -43,25 +44,32 @@ export default function FormAddData({ route, navigation }) {
         );
     };
 
+    const [loading, setLoading] = useState(false);
+
     // Validate & submit form
     const onSubmit = () => {
-        // Simple validation
-        if (type === 'destination') {
-            if (!form.name || !form.location || !form.category || !form.image) {
-                Alert.alert('Error', 'Please fill all fields!');
-                return;
+        setLoading(true);
+
+        setTimeout(() => {
+            if (type === 'destination') {
+                if (!form.name || !form.location || !form.category || !form.image) {
+                    Alert.alert('Error', 'Please fill all fields!');
+                    setLoading(false);
+                    return;
+                }
+                Alert.alert('Success', 'Destination added!');
+            } else if (type === 'news') {
+                if (!form.title || !form.category || !form.date || !form.content || !form.image) {
+                    Alert.alert('Error', 'Please fill all fields!');
+                    setLoading(false);
+                    return;
+                }
+                Alert.alert('Success', 'News added!');
             }
-            // TODO: submit destination data
-            Alert.alert('Success', 'Destination added!');
-        } else if (type === 'news') {
-            if (!form.title || !form.category || !form.date || !form.content || !form.image) {
-                Alert.alert('Error', 'Please fill all fields!');
-                return;
-            }
-            // TODO: submit news data
-            Alert.alert('Success', 'News added!');
-        }
-        navigation.goBack();
+
+            setLoading(false);
+            navigation.goBack();
+        }, 1500); // simulasi proses submit
     };
 
     return (
@@ -135,8 +143,14 @@ export default function FormAddData({ route, navigation }) {
                 </>
             )}
 
-            <TouchableOpacity style={styles.button} onPress={onSubmit}>
-                <Text style={styles.buttonText}>Tambah {type === 'destination' ? 'Destinasi' : 'Berita'}</Text>
+            <TouchableOpacity style={styles.button} onPress={onSubmit} disabled={loading}>
+                {loading ? (
+                    <ActivityIndicator color={colors.white()} />
+                ) : (
+                    <Text style={styles.buttonText}>
+                        Tambah {type === 'destination' ? 'Destinasi' : 'Berita'}
+                    </Text>
+                )}
             </TouchableOpacity>
         </ScrollView>
     );
@@ -182,23 +196,23 @@ const styles = StyleSheet.create({
         fontFamily: fontType['Poppins-SemiBold'],
     },
     imagePicker: {
-  borderWidth: 1,
-  borderColor: colors.grey(),
-  borderRadius: 8,
-  padding: 12,
-  justifyContent: 'center',
-  alignItems: 'center',
-  height: 180,
-  marginBottom: 16,
-  backgroundColor: colors.white(),
-},
-imagePickerText: {
-  fontFamily: fontType['Poppins-Regular'],
-  color: colors.grey(),
-},
-imagePreview: {
-  width: '100%',
-  height: '100%',
-  borderRadius: 6,
-},
+        borderWidth: 1,
+        borderColor: colors.grey(),
+        borderRadius: 8,
+        padding: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: 180,
+        marginBottom: 16,
+        backgroundColor: colors.white(),
+    },
+    imagePickerText: {
+        fontFamily: fontType['Poppins-Regular'],
+        color: colors.grey(),
+    },
+    imagePreview: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 6,
+    },
 });

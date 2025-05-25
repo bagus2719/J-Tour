@@ -1,12 +1,5 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  Image,
-  Dimensions,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Image, Dimensions, TouchableOpacity } from 'react-native';
 
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import { NewsList } from '../../data';
@@ -17,6 +10,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export default function NewsDetails() {
   // Hardcoded ID 1, bisa diganti sesuai kebutuhan
   const news = NewsList.find((item) => item.id === 1);
+  const [liked, setLiked] = useState(null);
 
   if (!news) {
     return (
@@ -49,6 +43,27 @@ export default function NewsDetails() {
 
         <Text style={styles.sectionTitle}>Isi Berita</Text>
         <Text style={styles.contentText}>{news.content}</Text>
+      </View>
+      <View style={styles.likeContainer}>
+        <TouchableOpacity
+          style={[
+            styles.likeButton,
+            liked === true && { backgroundColor: '#4CAF50' },
+          ]}
+          onPress={() => setLiked(true)}
+        >
+          <Text style={styles.likeText}>👍 Like</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.likeButton,
+            liked === false && { backgroundColor: '#F44336' },
+          ]}
+          onPress={() => setLiked(false)}
+        >
+          <Text style={styles.likeText}>👎 Dislike</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -99,7 +114,7 @@ const styles = StyleSheet.create({
   contentText: {
     fontSize: 14,
     fontFamily: fontType['Poppins-Regular'],
-    color: colors.grey(1),
+    color: colors.black(),
     lineHeight: 22,
   },
   centered: {
@@ -111,5 +126,21 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     color: colors.red ? colors.red() : 'red',
+  },
+  likeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 8,
+    marginBottom: 22,
+  },
+  likeButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#e0e0e0',
+  },
+  likeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
