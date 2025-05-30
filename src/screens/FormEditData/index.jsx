@@ -11,20 +11,20 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { launchImageLibrary } from 'react-native-image-picker';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import firestore from '@react-native-firebase/firestore';
-import { colors, fontType } from '../../theme';
+import DateTimePicker from '@react-native-community/datetimepicker'; //
+import { launchImageLibrary } from 'react-native-image-picker'; //
+// import { doc, getDoc, updateDoc } from 'firebase/firestore'; // Tidak digunakan langsung di sini, firestore diimpor di bawah
+import firestore from '@react-native-firebase/firestore'; //
+import { colors, fontType } from '../../theme'; //
 
 export default function FormEditData({ route, navigation }) {
-  const { type, id } = route.params || {};
+  const { type, id } = route.params || {}; //
 
-  const [form, setForm] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [loadingData, setLoadingData] = useState(true);
-  const [datePickerVisible, setDatePickerVisible] = useState(false);
-  const [dateObj, setDateObj] = useState(new Date());
+  const [form, setForm] = useState(null); //
+  const [loading, setLoading] = useState(false); //
+  const [loadingData, setLoadingData] = useState(true); //
+  const [datePickerVisible, setDatePickerVisible] = useState(false); //
+  const [dateObj, setDateObj] = useState(new Date()); //
 
   useEffect(() => {
     if (!id) {
@@ -36,9 +36,11 @@ export default function FormEditData({ route, navigation }) {
     async function fetchData() {
       setLoadingData(true);
       try {
-        const ref = doc(firestore, type, id);
-        const docSnap = await getDoc(ref);
-        if (!docSnap.exists()) throw new Error('Data tidak ditemukan');
+        const collectionName = type === 'destination' ? 'destinations' : 'news';
+        const docRef = firestore().collection(collectionName).doc(id);
+        const docSnap = await docRef.get();
+        
+        if (!docSnap.exists) throw new Error('Data tidak ditemukan');
 
         const data = docSnap.data();
 
@@ -48,7 +50,7 @@ export default function FormEditData({ route, navigation }) {
             location: data.location || '',
             category: data.category || '',
             description: data.description || '',
-            facilities: data.facilities ? data.facilities.join(', ') : '',
+            facilities: Array.isArray(data.facilities) ? data.facilities.join(', ') : (data.facilities || ''),
             image: data.image || '',
           });
         } else if (type === 'news') {
@@ -61,11 +63,20 @@ export default function FormEditData({ route, navigation }) {
           });
 
           if (data.date) {
-            const [day, month, year] = data.date.split('/');
-            setDateObj(new Date(year, month - 1, day));
+            // Pastikan format tanggal sesuai saat konversi ke Date object
+            // Format yang diharapkan oleh new Date() adalah YYYY-MM-DD atau MM/DD/YYYY
+            // Jika format Anda DD/MM/YYYY, perlu di-parse manual
+            const parts = data.date.split('/');
+            if (parts.length === 3) {
+                // Asumsi format DD/MM/YYYY
+                setDateObj(new Date(parts[2], parts[1] - 1, parts[0]));
+            } else {
+                setDateObj(new Date(data.date)); // fallback jika format lain
+            }
           }
         }
       } catch (error) {
+        console.error("Error fetching document: ", error);
         Alert.alert('Error', error.message);
         navigation.goBack();
       } finally {
@@ -101,13 +112,17 @@ export default function FormEditData({ route, navigation }) {
         return;
       }
       const asset = response.assets[0];
+      if (!asset.uri) {
+        Alert.alert('Error', 'URI gambar tidak ditemukan.');
+        return;
+      }
       const imageUri = asset.uri;
 
       const formData = new FormData();
       formData.append('file', {
         uri: imageUri,
-        type: asset.type,
-        name: asset.fileName,
+        type: asset.type || 'image/jpeg',
+        name: asset.fileName || 'image.jpg',
       });
 
       try {
@@ -126,7 +141,7 @@ export default function FormEditData({ route, navigation }) {
           Alert.alert('Upload Gagal', 'Gagal mendapatkan URL gambar');
         }
       } catch (err) {
-        Alert.alert('Error', err.message);
+        Alert.alert('Error Upload', err.message);
       } finally {
         setLoading(false);
       }
@@ -134,53 +149,55 @@ export default function FormEditData({ route, navigation }) {
   };
 
   const onSubmit = async () => {
-    if (!form) return Alert.alert('Error', 'Form belum siap.');
+    if (!form) {
+      Alert.alert('Error', 'Form belum siap.');
+      return;
+    } 
 
     setLoading(true);
 
     try {
-      const ref = doc(firestore, type, id);
+      const collectionName = type === 'destination' ? 'destinations' : 'news';
+      const docRef = firestore().collection(collectionName).doc(id);
+      let dataToUpdate = {};
 
       if (type === 'destination') {
         const { name, location, category, description, facilities, image } = form;
-        if (!name || !location || !category || !description || !facilities || !image) {
-          Alert.alert('Error', 'Semua field harus diisi!');
+        if (!name || !location || !category || !description ) { // Fasilitas & gambar bisa opsional saat edit
+          Alert.alert('Error', 'Nama, Lokasi, Kategori, dan Deskripsi harus diisi!');
           setLoading(false);
           return;
         }
-
-        await updateDoc(ref, {
+        dataToUpdate = {
           name,
           location,
           category,
           description,
-          facilities: facilities.split(',').map((f) => f.trim()),
+          facilities: facilities ? facilities.split(',').map((f) => f.trim()) : [],
           image,
-        });
-
-        Alert.alert('Sukses', 'Destinasi berhasil diperbarui!');
+        };
       } else if (type === 'news') {
         const { title, category, date, content, image } = form;
-        if (!title || !category || !date || !content || !image) {
-          Alert.alert('Error', 'Semua field harus diisi!');
+        if (!title || !category || !date || !content ) { // Gambar bisa opsional saat edit
+          Alert.alert('Error', 'Judul, Kategori, Tanggal, dan Konten harus diisi!');
           setLoading(false);
           return;
         }
-
-        await updateDoc(ref, {
+        dataToUpdate = {
           title,
           category,
           date,
           content,
           image,
-        });
-
-        Alert.alert('Sukses', 'Berita berhasil diperbarui!');
+        };
       }
-
+      
+      await docRef.update(dataToUpdate);
+      Alert.alert('Sukses', `Data ${type} berhasil diperbarui!`);
       navigation.goBack();
     } catch (error) {
-      Alert.alert('Error', error.message);
+      console.error("Error updating document: ", error);
+      Alert.alert('Error Update', error.message);
     } finally {
       setLoading(false);
     }
@@ -195,7 +212,8 @@ export default function FormEditData({ route, navigation }) {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
+    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+      {/* Semua teks di bawah ini sudah terbungkus <Text> */}
       <Text style={styles.header}>
         {type === 'destination' ? 'Edit Destinasi' : 'Edit Berita'}
       </Text>
@@ -221,21 +239,21 @@ export default function FormEditData({ route, navigation }) {
             onChangeText={(text) => onChange('category', text)}
           />
           <TextInput
-            style={[styles.input, { height: 100 }]}
+            style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
             placeholder="Deskripsi"
             value={form.description}
             onChangeText={(text) => onChange('description', text)}
             multiline
           />
           <TextInput
-            style={[styles.input, { height: 80 }]}
+            style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
             placeholder="Fasilitas (pisahkan dengan koma)"
-            value={form.facilities}
+            value={form.facilities} // Ini adalah string, bukan array saat di form
             onChangeText={(text) => onChange('facilities', text)}
             multiline
           />
         </>
-      ) : (
+      ) : ( // type === 'news'
         <>
           <TextInput
             style={styles.input}
@@ -252,7 +270,7 @@ export default function FormEditData({ route, navigation }) {
 
           <TouchableOpacity
             onPress={() => setDatePickerVisible(true)}
-            style={[styles.input, { justifyContent: 'center' }]}
+            style={[styles.input, { justifyContent: 'center', height: 50 }]} // Tambahkan tinggi agar mudah ditekan
           >
             <Text style={{ color: form.date ? colors.black() : colors.grey() }}>
               {form.date || 'Pilih Tanggal'}
@@ -270,7 +288,7 @@ export default function FormEditData({ route, navigation }) {
           )}
 
           <TextInput
-            style={[styles.input, { height: 100 }]}
+            style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
             placeholder="Isi Konten"
             value={form.content}
             onChangeText={(text) => onChange('content', text)}
@@ -280,7 +298,7 @@ export default function FormEditData({ route, navigation }) {
       )}
 
       <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-        <Text style={{ color: colors.white(), fontFamily: fontType.bold }}>Upload Gambar</Text>
+        <Text style={{ color: colors.white(), fontFamily: fontType['Pjs-Bold'] || 'Poppins-Bold' }}>Upload Gambar</Text>
       </TouchableOpacity>
 
       {form.image ? <Image source={{ uri: form.image }} style={styles.imagePreview} /> : null}
@@ -296,53 +314,56 @@ export default function FormEditData({ route, navigation }) {
   );
 }
 
+// Pastikan styles ini konsisten dengan yang Anda miliki,
+// terutama fontType.bold, fontType.regular, dll.
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white(),
+    backgroundColor: colors.white(), //
   },
   header: {
-    fontSize: 24,
-    fontFamily: fontType.bold,
-    marginBottom: 16,
-    color: colors.greenDark(),
-    textAlign: 'center',
+    fontSize: 24, //
+    fontFamily: fontType['Pjs-Bold'] || 'Poppins-Bold', // Fallback jika Pjs-Bold tidak ada
+    marginBottom: 16, //
+    color: colors.greenDark(), //
+    textAlign: 'center', //
   },
   input: {
-    borderWidth: 1,
-    borderColor: colors.grey(),
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    fontFamily: fontType.regular,
-    fontSize: 16,
-    color: colors.black(),
-    backgroundColor: colors.white(),
+    borderWidth: 1, //
+    borderColor: colors.grey(), //
+    borderRadius: 8, //
+    paddingHorizontal: 12, //
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8, // Penyesuaian padding vertikal
+    marginBottom: 12, //
+    fontFamily: fontType['Pjs-Regular'] || 'Poppins-Regular', // Fallback
+    fontSize: 16, //
+    color: colors.black(), //
+    backgroundColor: colors.white(), //
   },
   button: {
-    backgroundColor: colors.greenDark(),
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 40,
+    backgroundColor: colors.greenDark(), //
+    padding: 15, //
+    borderRadius: 8, //
+    alignItems: 'center', //
+    marginTop: 16, //
+    marginBottom: 40, //
   },
   buttonText: {
-    color: colors.white(),
-    fontFamily: fontType.bold,
-    fontSize: 18,
+    color: colors.white(), //
+    fontFamily: fontType['Pjs-Bold'] || 'Poppins-Bold', // Fallback
+    fontSize: 18, //
   },
   imagePreview: {
-    width: '100%',
-    height: 200,
-    marginBottom: 12,
-    borderRadius: 8,
+    width: '100%', //
+    height: 200, //
+    marginBottom: 12, //
+    borderRadius: 8, //
   },
   uploadButton: {
-    backgroundColor: colors.greyDark ? colors.greyDark() : '#555',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 12,
+    backgroundColor: colors.greyDark ? colors.greyDark() : '#555', //
+    padding: 12, //
+    borderRadius: 8, //
+    alignItems: 'center', //
+    marginBottom: 12, //
   },
 });
