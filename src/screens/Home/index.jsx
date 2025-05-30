@@ -31,7 +31,6 @@ export default function Home() {
     return matchesCategory && matchesSearch;
   });
 
-  // Animation on mount
   useEffect(() => {
     Animated.timing(destinationOpacity, {
       toValue: 1,

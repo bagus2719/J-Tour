@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "546891700537",
+    "project_id": "j-tour-4b125",
+    "storage_bucket": "j-tour-4b125.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:546891700537:android:ee4246be8656724f4930e8",
+        "android_client_info": {
+          "package_name": "com.j_tour"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDY0jdhth_ICXl_-6Ox4quLKnbQi4vdUAs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,11 +1,16 @@
 // Daftar Kategori
 export const CategoryList = [
-  { id: 1, categoryName: 'Popular' },
-  { id: 2, categoryName: 'Latest' },
-  { id: 3, categoryName: 'Pantai' },
-  { id: 4, categoryName: 'Pegunungan' },
-  { id: 5, categoryName: 'Air Terjun' },
-  { id: 6, categoryName: 'Budaya' },
+  { id: 1, name: 'Popular' },
+  { id: 2, name: 'Latest' },
+  { id: 3, name: 'Pantai' },
+  { id: 4, name: 'Gunung' },
+  { id: 5, name: 'Kuliner' },
+  { id: 6, name: 'Budaya' },
+  { id: 7, name: 'Taman' },
+  { id: 8, name: 'Acara' },
+  { id: 9, name: 'Informasi' },
+  { id: 10, name: 'Tips' },
+  { id: 11, name: 'Promo' },
 ];
 
 // Destination List

@@ -12,15 +12,15 @@ export default function CategoryList({ categories, selectedCategory, onSelectCat
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 24 }}
         renderItem={({ item }) => {
-          const isSelected = item.categoryName === selectedCategory;
+          const isSelected = item.name === selectedCategory;
           return (
             <Pressable
               style={[styles.item, isSelected && styles.itemSelected]}
-              onPress={() => onSelectCategory(item.categoryName)} 
+              onPress={() => onSelectCategory(item.name)} 
               android_ripple={{ color: colors.green(0.3), borderless: false }} 
             >
               <Text style={[styles.title, isSelected && styles.titleSelected]}>
-                {item.categoryName}
+                {item.name}
               </Text>
             </Pressable>
           );
@@ -29,6 +29,7 @@ export default function CategoryList({ categories, selectedCategory, onSelectCat
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   listCategory: { paddingVertical: 10, marginTop: 6 },
