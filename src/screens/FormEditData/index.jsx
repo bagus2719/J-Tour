@@ -11,20 +11,20 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker'; //
-import { launchImageLibrary } from 'react-native-image-picker'; //
-// import { doc, getDoc, updateDoc } from 'firebase/firestore'; // Tidak digunakan langsung di sini, firestore diimpor di bawah
-import firestore from '@react-native-firebase/firestore'; //
-import { colors, fontType } from '../../theme'; //
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { launchImageLibrary } from 'react-native-image-picker';
+// import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import firestore from '@react-native-firebase/firestore';
+import { colors, fontType } from '../../theme';
 
 export default function FormEditData({ route, navigation }) {
-  const { type, id } = route.params || {}; //
+  const { type, id } = route.params || {};
 
-  const [form, setForm] = useState(null); //
-  const [loading, setLoading] = useState(false); //
-  const [loadingData, setLoadingData] = useState(true); //
-  const [datePickerVisible, setDatePickerVisible] = useState(false); //
-  const [dateObj, setDateObj] = useState(new Date()); //
+  const [form, setForm] = useState(null); 
+  const [loading, setLoading] = useState(false); 
+  const [loadingData, setLoadingData] = useState(true); 
+  const [datePickerVisible, setDatePickerVisible] = useState(false); 
+  const [dateObj, setDateObj] = useState(new Date()); 
 
   useEffect(() => {
     if (!id) {
@@ -63,15 +63,11 @@ export default function FormEditData({ route, navigation }) {
           });
 
           if (data.date) {
-            // Pastikan format tanggal sesuai saat konversi ke Date object
-            // Format yang diharapkan oleh new Date() adalah YYYY-MM-DD atau MM/DD/YYYY
-            // Jika format Anda DD/MM/YYYY, perlu di-parse manual
             const parts = data.date.split('/');
             if (parts.length === 3) {
-                // Asumsi format DD/MM/YYYY
                 setDateObj(new Date(parts[2], parts[1] - 1, parts[0]));
             } else {
-                setDateObj(new Date(data.date)); // fallback jika format lain
+                setDateObj(new Date(data.date)); 
             }
           }
         }
@@ -163,7 +159,7 @@ export default function FormEditData({ route, navigation }) {
 
       if (type === 'destination') {
         const { name, location, category, description, facilities, image } = form;
-        if (!name || !location || !category || !description ) { // Fasilitas & gambar bisa opsional saat edit
+        if (!name || !location || !category || !description ) {
           Alert.alert('Error', 'Nama, Lokasi, Kategori, dan Deskripsi harus diisi!');
           setLoading(false);
           return;
@@ -178,7 +174,7 @@ export default function FormEditData({ route, navigation }) {
         };
       } else if (type === 'news') {
         const { title, category, date, content, image } = form;
-        if (!title || !category || !date || !content ) { // Gambar bisa opsional saat edit
+        if (!title || !category || !date || !content ) {
           Alert.alert('Error', 'Judul, Kategori, Tanggal, dan Konten harus diisi!');
           setLoading(false);
           return;
@@ -213,7 +209,6 @@ export default function FormEditData({ route, navigation }) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-      {/* Semua teks di bawah ini sudah terbungkus <Text> */}
       <Text style={styles.header}>
         {type === 'destination' ? 'Edit Destinasi' : 'Edit Berita'}
       </Text>
@@ -248,12 +243,12 @@ export default function FormEditData({ route, navigation }) {
           <TextInput
             style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
             placeholder="Fasilitas (pisahkan dengan koma)"
-            value={form.facilities} // Ini adalah string, bukan array saat di form
+            value={form.facilities}
             onChangeText={(text) => onChange('facilities', text)}
             multiline
           />
         </>
-      ) : ( // type === 'news'
+      ) : ( 
         <>
           <TextInput
             style={styles.input}
@@ -270,7 +265,7 @@ export default function FormEditData({ route, navigation }) {
 
           <TouchableOpacity
             onPress={() => setDatePickerVisible(true)}
-            style={[styles.input, { justifyContent: 'center', height: 50 }]} // Tambahkan tinggi agar mudah ditekan
+            style={[styles.input, { justifyContent: 'center', height: 50 }]}
           >
             <Text style={{ color: form.date ? colors.black() : colors.grey() }}>
               {form.date || 'Pilih Tanggal'}
@@ -314,29 +309,27 @@ export default function FormEditData({ route, navigation }) {
   );
 }
 
-// Pastikan styles ini konsisten dengan yang Anda miliki,
-// terutama fontType.bold, fontType.regular, dll.
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white(), //
+    backgroundColor: colors.white(),
   },
   header: {
-    fontSize: 24, //
-    fontFamily: fontType['Pjs-Bold'] || 'Poppins-Bold', // Fallback jika Pjs-Bold tidak ada
-    marginBottom: 16, //
-    color: colors.greenDark(), //
-    textAlign: 'center', //
+    fontSize: 24, 
+    fontFamily: fontType['Pjs-Bold'] || 'Poppins-Bold', 
+    marginBottom: 16, 
+    color: colors.greenDark(),
+    textAlign: 'center',
   },
   input: {
-    borderWidth: 1, //
-    borderColor: colors.grey(), //
-    borderRadius: 8, //
-    paddingHorizontal: 12, //
-    paddingVertical: Platform.OS === 'ios' ? 12 : 8, // Penyesuaian padding vertikal
-    marginBottom: 12, //
-    fontFamily: fontType['Pjs-Regular'] || 'Poppins-Regular', // Fallback
-    fontSize: 16, //
+    borderWidth: 1, 
+    borderColor: colors.grey(), 
+    borderRadius: 8, 
+    paddingHorizontal: 12, 
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+    marginBottom: 12,
+    fontFamily: fontType['Pjs-Regular'] || 'Poppins-Regular',
+    fontSize: 16,
     color: colors.black(), //
     backgroundColor: colors.white(), //
   },
