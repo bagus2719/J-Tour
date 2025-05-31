@@ -1,18 +1,15 @@
-// src/screens/FormAddData/index.jsx
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView,
   Alert, Image, ActivityIndicator, Platform
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { colors, fontType } from '../../theme'; //
+import { colors, fontType } from '../../theme';
 import * as ImagePicker from 'react-native-image-picker';
 import firestore from '@react-native-firebase/firestore';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
-import { CategoryList } from '../../data'; //
-
-// Tambahkan import Notifee
+import { CategoryList } from '../../data';
 import notifee, { AndroidImportance } from '@notifee/react-native';
 
 export default function FormAddData({ route, navigation }) {
@@ -31,14 +28,14 @@ export default function FormAddData({ route, navigation }) {
     type === 'destination'
       ? ['Pantai', 'Gunung', 'Kuliner', 'Budaya', 'Taman'].includes(item.name)
       : ['Acara', 'Informasi', 'Tips', 'Promo'].includes(item.name)
-  ); //
+  );
 
   const formatDate = (date) => {
     const day = date.getDate().toString().padStart(2, '0');
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
-  }; //
+  };
 
   const onDateChange = (event, selectedDate) => {
     setDatePickerVisible(Platform.OS === 'ios');
@@ -46,11 +43,11 @@ export default function FormAddData({ route, navigation }) {
       setDateObj(selectedDate);
       setForm(prev => ({ ...prev, date: formatDate(selectedDate) }));
     }
-  }; //
+  };
 
   const onChange = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
-  }; //
+  };
 
   const handleImagePick = async () => {
     ImagePicker.launchImageLibrary({ mediaType: 'photo', quality: 0.7 }, async (response) => { // Menggunakan ImagePicker dari import
@@ -69,8 +66,8 @@ export default function FormAddData({ route, navigation }) {
           Alert.alert('Error', 'URI gambar tidak ditemukan.');
           return;
         }
-        // Langsung upload gambar setelah dipilih untuk mendapatkan URL
-        setLoading(true); // Tampilkan loading saat gambar diupload
+
+        setLoading(true);
         try {
           const formData = new FormData();
           formData.append('file', {
@@ -97,15 +94,14 @@ export default function FormAddData({ route, navigation }) {
         }
       }
     });
-  }; // Modifikasi dari
+  };
 
-  // --- Fungsi untuk Menampilkan Notifikasi Lokal ---
   async function displayUploadSuccessNotification(itemType, itemName) {
     try {
-      await notifee.requestPermission(); // Minta izin jika belum ada
+      await notifee.requestPermission(); 
 
       const channelId = await notifee.createChannel({
-        id: 'upload_success_channel', // ID channel bisa lebih spesifik
+        id: 'upload_success_channel',
         name: 'Upload Sukses',
         importance: AndroidImportance.HIGH,
         sound: 'default',
@@ -116,7 +112,7 @@ export default function FormAddData({ route, navigation }) {
         body: `${itemName} telah berhasil ditambahkan ke J-Tour.`,
         android: {
           channelId,
-          smallIcon: 'ic_launcher', // Pastikan ikon ini ada
+          smallIcon: 'ic_launcher', 
           pressAction: {
             id: 'default',
           },
@@ -133,7 +129,7 @@ export default function FormAddData({ route, navigation }) {
 
   const onSubmit = async () => {
     setLoading(true);
-    let itemName = ''; // Untuk digunakan di notifikasi
+    let itemName = ''; 
 
     try {
       if (!form.image) {
@@ -144,8 +140,8 @@ export default function FormAddData({ route, navigation }) {
 
       if (type === 'destination') {
         const { name, location, category, description, facilities, image } = form;
-        itemName = name; //
-        if (!name || !location || !category || !description || !facilities ) { // image sudah dicek di atas
+        itemName = name;
+        if (!name || !location || !category || !description || !facilities ) { 
           Alert.alert('Error', 'Semua field destinasi (kecuali gambar) harus diisi!');
           setLoading(false);
           return;
@@ -157,17 +153,17 @@ export default function FormAddData({ route, navigation }) {
           category,
           description,
           facilities: facilities.split(',').map(item => item.trim()),
-          image, // URL gambar dari state form
+          image,
           createdAt: firestore.FieldValue.serverTimestamp()
-        }); //
+        });
 
         Alert.alert('Sukses', 'Destinasi berhasil ditambahkan!');
-        await displayUploadSuccessNotification('Destinasi', name); // Tampilkan notifikasi Notifee
+        await displayUploadSuccessNotification('Destinasi', name);
 
       } else if (type === 'news') {
         const { title, category, date, content, image } = form;
         itemName = title; //
-        if (!title || !category || !date || !content ) { // image sudah dicek di atas
+        if (!title || !category || !date || !content ) {
           Alert.alert('Error', 'Semua field berita (kecuali gambar) harus diisi!');
           setLoading(false);
           return;
@@ -178,12 +174,12 @@ export default function FormAddData({ route, navigation }) {
           category,
           date,
           content,
-          image, // URL gambar dari state form
+          image,
           createdAt: firestore.FieldValue.serverTimestamp()
-        }); //
+        }); 
 
         Alert.alert('Sukses', 'Berita berhasil ditambahkan!');
-        await displayUploadSuccessNotification('Berita', title); // Tampilkan notifikasi Notifee
+        await displayUploadSuccessNotification('Berita', title);
       }
 
       navigation.goBack();
@@ -193,10 +189,7 @@ export default function FormAddData({ route, navigation }) {
     } finally {
       setLoading(false);
     }
-  }; // Modifikasi dari
-
-  // ... sisa JSX (return statement) Anda tidak perlu diubah secara signifikan untuk logika ini
-  // Pastikan tombol "Tambah" memanggil `onSubmit`
+  };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
@@ -278,48 +271,46 @@ export default function FormAddData({ route, navigation }) {
         )}
       </TouchableOpacity>
     </ScrollView>
-  ); // JSX dari
+  );
 }
 
-// Styles (gunakan styles yang sudah ada dari file FormAddData.jsx Anda)
-// Saya akan menyalinnya dari file yang Anda berikan
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white(), //
+    backgroundColor: colors.white(),
   },
   header: {
     fontSize: 22,
-    fontFamily: fontType['Poppins-Bold'], //
+    fontFamily: fontType['Poppins-Bold'],
     marginBottom: 20,
-    color: colors.greenDark(), //
+    color: colors.greenDark(), 
     textAlign: 'center',
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.grey(0.5), //
+    borderColor: colors.grey(0.5),
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: Platform.OS === 'ios' ? 14 : 10,
     marginBottom: 16,
-    fontFamily: fontType['Poppins-Regular'], //
+    fontFamily: fontType['Poppins-Regular'],
     fontSize: 16,
-    backgroundColor: colors.white(), //
+    backgroundColor: colors.white(),
   },
   pickerWrapper: {
     borderWidth: 1,
-    borderColor: colors.grey(0.5), //
+    borderColor: colors.grey(0.5),
     borderRadius: 8,
     marginBottom: 16,
-    backgroundColor: colors.white(), //
+    backgroundColor: colors.white(),
   },
   button: {
-    backgroundColor: colors.greenDark(), //
+    backgroundColor: colors.greenDark(), 
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: 'center',
-    marginTop: 10, // Diubah dari 10 ke 20 untuk memberi jarak dari preview gambar
-    marginBottom: 20, // Memberi jarak di bawah tombol
+    marginTop: 10,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 3 },
@@ -327,28 +318,28 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   buttonText: {
-    color: colors.white(), //
+    color: colors.white(),
     fontSize: 16,
-    fontFamily: fontType['Poppins-SemiBold'], //
+    fontFamily: fontType['Poppins-SemiBold'],
   },
-  buttonImage: { // Style baru untuk tombol pilih gambar
-    backgroundColor: colors.green(0.8), //
+  buttonImage: {
+    backgroundColor: colors.green(0.8),
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
     marginBottom: 16,
   },
-  buttonImageText: { // Style baru untuk teks tombol pilih gambar
-    color: colors.white(), //
+  buttonImageText: { 
+    color: colors.white(),
     fontSize: 14,
-    fontFamily: fontType['Poppins-Medium'], //
+    fontFamily: fontType['Poppins-Medium'],
   },
   imagePreview: {
-    width: '80%', // Ubah agar tidak terlalu lebar
+    width: '80%',
     height: 180,
     borderRadius: 8,
-    marginBottom: 5, // Kurangi margin bawah
+    marginBottom: 5,
     borderWidth: 1,
-    borderColor: colors.grey(0.3), //
+    borderColor: colors.grey(0.3),
   },
-}); //
+});
