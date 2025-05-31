@@ -17,7 +17,7 @@ export default function Destinations() {
       .collection('destinations')
       .onSnapshot(querySnapshot => {
         const destinationsArray = [];
-        if (querySnapshot) { // Tambahkan pengecekan querySnapshot
+        if (querySnapshot) {
           querySnapshot.forEach(documentSnapshot => {
             destinationsArray.push({
               id: documentSnapshot.id,
@@ -43,14 +43,10 @@ export default function Destinations() {
       activeOpacity={0.85}
       onPress={() => navigation.navigate('DestinationDetails', { destination: item })}
     >
-      {/* Pastikan item.image adalah string URL yang valid */}
       <Image source={{ uri: typeof item.image === 'string' && item.image ? item.image : 'https://via.placeholder.com/150' }} style={styles.image} />
       <View style={styles.content}>
-        {/* Memberikan fallback jika item.name tidak ada */}
         <Text style={styles.name} numberOfLines={1}>{item.name || 'Nama Tidak Tersedia'}</Text>
-        {/* Memberikan fallback jika item.location tidak ada */}
         <Text style={styles.location} numberOfLines={1}>{item.location || 'Lokasi Tidak Tersedia'}</Text>
-        {/* Memberikan fallback jika item.category tidak ada */}
         <Text style={styles.category}>{item.category || 'Kategori Tidak Diketahui'}</Text>
       </View>
     </TouchableOpacity>
@@ -70,15 +66,13 @@ export default function Destinations() {
       <View style={styles.errorContainer}>
         <Text style={styles.errorTextHeader}>Oops!</Text>
         <Text style={styles.errorText}>{error}</Text>
-        {/* Anda bisa menambahkan tombol untuk mencoba lagi jika diperlukan */}
       </View>
     );
   }
   
-  // Hanya tampilkan pesan "Belum ada destinasi" jika tidak loading dan tidak ada error, tetapi data kosong
   if (!loading && !error && destinations.length === 0) {
     return (
-      <View style={styles.container}> {/* Menggunakan style container agar header tetap ada */}
+      <View style={styles.container}>
          <Text style={styles.header}>Destinasi Wisata</Text>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>Belum ada destinasi yang ditambahkan.</Text>
@@ -95,7 +89,7 @@ export default function Destinations() {
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={ // Komponen ini tidak akan terpanggil jika loading atau error, karena kondisi di atas
+        ListEmptyComponent={ 
           (!loading && !error) ? (
             <View style={styles.emptyContainerFull}>
               <Text style={styles.emptyText}>Tidak ada destinasi yang cocok.</Text>
@@ -108,22 +102,22 @@ export default function Destinations() {
 }
 
 const styles = StyleSheet.create({
-  container: { //
+  container: {
     flex: 1,
     backgroundColor: colors.white(),
   },
-  header: { //
+  header: { 
     fontSize: 24,
     fontFamily: fontType['Poppins-Bold'],
-    marginVertical: 18, // Menggunakan marginVertical
-    marginHorizontal: 18, // Tetap marginHorizontal
+    marginVertical: 18,
+    marginHorizontal: 18,
     color: colors.greenDark(),
   },
-  list: { //
+  list: {
     paddingHorizontal: 16,
     paddingBottom: 20,
   },
-  card: { //
+  card: {
     backgroundColor: colors.white(),
     borderRadius: 12,
     marginBottom: 16,
@@ -134,27 +128,27 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  image: { //
+  image: {
     width: '100%',
     height: 150,
-    backgroundColor: colors.grey(0.1), // Warna placeholder jika gambar gagal dimuat
+    backgroundColor: colors.grey(0.1),
   },
-  content: { //
+  content: {
     padding: 15,
   },
-  name: { //
+  name: {
     fontSize: 18,
     fontFamily: fontType['Poppins-SemiBold'],
     color: colors.greenDark(),
     marginBottom: 5,
   },
-  location: { //
+  location: {
     fontSize: 14,
     color: colors.grey(),
     fontFamily: fontType['Poppins-Regular'],
     marginBottom: 5,
   },
-  category: { //
+  category: {
     fontSize: 12,
     color: colors.green(0.7),
     fontFamily: fontType['Poppins-Regular'],
@@ -165,7 +159,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.white(),
   },
-  loadingText: { // Teks tambahan untuk loading
+  loadingText: {
     marginTop: 10,
     fontSize: 14,
     fontFamily: fontType['Poppins-Regular'],
@@ -178,7 +172,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: colors.white(),
   },
-  errorTextHeader: { // Header untuk pesan error
+  errorTextHeader: {
     fontSize: 20,
     fontFamily: fontType['Poppins-Bold'],
     color: colors.red ? colors.red() : 'red',
@@ -192,20 +186,19 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   emptyContainer: { 
-    flex: 1, // Agar mengambil sisa ruang jika FlatList kosong
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    // marginTop: 20, // Beri jarak dari header jika data benar-benar kosong
-  },
+   },
   emptyText: { 
     fontSize: 16,
     color: colors.grey(),
     fontFamily: fontType['Poppins-Regular'],
     textAlign: 'center',
   },
-   emptyContainerFull: { // Untuk ListEmptyComponent pada FlatList
-    height: 200, // Beri tinggi agar terlihat
+   emptyContainerFull: {
+    height: 200,
     justifyContent: 'center',
     alignItems: 'center',
   }
